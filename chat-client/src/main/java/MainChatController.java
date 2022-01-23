@@ -76,25 +76,22 @@ public class MainChatController implements Initializable {
         MenuItem item1 = new MenuItem("Private");
         MenuItem item2 = new MenuItem("BlackList");
 
-
-        item1.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+        item1.setOnAction(new EventHandler<ActionEvent>() {
             @Override
-            public void handle(MouseEvent event) {
-                if (event.getButton() == MouseButton.SECONDARY) {
-                    mainChatArea.appendText("Hey, " +  contactList.getSelectionModel().getSelectedItem() + ", maybe Private?");
-
-                }
+            public void handle(ActionEvent event) {
+                mainChatArea.appendText("Hey, " +  contactList.getSelectionModel().getSelectedItem() +
+                        ", maybe Private?" + System.lineSeparator());
             }
         });
 
-        item2.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+        item2.setOnAction(new EventHandler<ActionEvent>() {
             @Override
-            public void handle(MouseEvent event) {
-                if (event.getButton() == MouseButton.SECONDARY) {
-                    mainChatArea.appendText("Hey, " +  contactList.getSelectionModel().getSelectedItem() + ", you are blocked!");
-                }
+            public void handle(ActionEvent event) {
+                mainChatArea.appendText("Hey, " +  contactList.getSelectionModel().getSelectedItem() +
+                        ", you are blocked!" + System.lineSeparator());
             }
         });
+
         contextMenu.getItems().addAll(item1, item2);
 
         contactList.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
@@ -105,11 +102,6 @@ public class MainChatController implements Initializable {
         });
 
         contactList.setItems(FXCollections.observableList(contacts));
-
-
-
-
-
 
     }
 }
