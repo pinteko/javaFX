@@ -1,3 +1,5 @@
+package homeworks.homework1;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
