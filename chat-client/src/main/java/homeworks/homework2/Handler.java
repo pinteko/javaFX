@@ -27,10 +27,11 @@ public class Handler extends Thread{
               if (word.equalsIgnoreCase("/quit")) {
                   break;
               }
-              int id = (int) this.getId();
+             // int id = (int) this.getId();
+              int id = ConsoleServer.clients.indexOf(this);
               if (word.substring(0, 2).equals("/w")) {
                   try {
-                      ConsoleServer.clients.get(Integer.parseInt(word.substring(3, 5))).send(word.substring(5), id);
+                      ConsoleServer.clients.get(Integer.parseInt(word.substring(3, 4))).send(word.substring(4), id);
                   }
                   catch (NumberFormatException e) {}
               }
@@ -42,7 +43,7 @@ public class Handler extends Thread{
 //              }
               else {
                   for (Handler hd : ConsoleServer.clients) {
-                      if (hd.getId() == id) {
+                      if (ConsoleServer.clients.indexOf(hd) == id) {
                           continue;
                       }
                       hd.send(word, id);
