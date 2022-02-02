@@ -155,7 +155,6 @@ public class MainChatController implements Initializable, MessageProcessor {
         if (login.isBlank() || password.isBlank()) {
             return;
         }
-
         var message = "/auth" + REGEX + login + REGEX + password;
 
         if (!networkService.isConnected()) {
@@ -174,8 +173,6 @@ public class MainChatController implements Initializable, MessageProcessor {
         ContextMenu contextMenu = new ContextMenu();
         MenuItem item1 = new MenuItem("Private");
         MenuItem item2 = new MenuItem("BlackList");
-        var recipient = contactList.getSelectionModel().getSelectedItem();
-
         item1.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
