@@ -48,9 +48,15 @@ public class ClientHandler {
             case "/broadcast":
                 server.broadcastMessage(user, splitMessage[1]);
                 break;
-//            case "/private" :
-//                server.privateMessage(user, splitMessage[1], splitMessage[2]);
-//                break;
+            case "/private" :
+                server.privateMessage(user, splitMessage[1], splitMessage[2]);
+                break;
+            case "/ignore" :
+                server.ignoreUser(user, splitMessage[1], splitMessage[2]);
+                break;
+            case "/tetATet" :
+                server.tetATetMessage(user, splitMessage[1], splitMessage[2]);
+                break;
         }
     }
 
