@@ -9,8 +9,15 @@
 
 <?import javafx.geometry.Insets?>
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="homeworks.homework1.MainChatController">
-    <VBox fx:id="mainChatPanel">
+            fx:controller="projectClient.MainChatController">
+    <VBox fx:id="loginPanel">
+        <Label text="Login: "/>
+        <TextField fx:id="loginField"/>
+        <Label text="Password: "/>
+        <PasswordField fx:id="passwordField"/>
+        <Button text="connect" onAction="#sendAuth"/>
+    </VBox>
+    <VBox fx:id="mainChatPanel" visible="false">
         <MenuBar>
             <Menu text="File">
                 <MenuItem text="Connect" onAction="#connectToServer"/>
