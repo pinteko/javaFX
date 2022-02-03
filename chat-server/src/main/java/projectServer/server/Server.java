@@ -38,19 +38,36 @@ public class Server {
         }
     }
 
-//    public void privateMessage(String from, String to, String message) {
-//        message = "/private" + REGEX + from + REGEX + to + REGEX + message;
-//        for (ClientHandler clientHandler : clientHandlers) {
-//            if (clientHandler.getUserNick().equals(to)) {
-//                clientHandler.send(message);
-//            }
-//        }
-//    }
+    public void privateMessage(String from, String to, String message) {
+        message = "/private" + REGEX + from + REGEX + to + REGEX + message;
+        for (ClientHandler clientHandler : clientHandlers) {
+            if (clientHandler.getUserNick().equals(to)) {
+                clientHandler.send(message);
+            }
+        }
+    }
 
     public void broadcastMessage(String from, String message) {
         message = "/broadcast" + REGEX + from + REGEX + message;
         for (ClientHandler clientHandler : clientHandlers) {
             clientHandler.send(message);
+        }
+    }
+    public void tetATetMessage(String from, String to, String message) {
+        message = "/tetATet" + REGEX + from + REGEX + to + REGEX + message;
+        for (ClientHandler clientHandler : clientHandlers) {
+            if (clientHandler.getUserNick().equals(to)) {
+                clientHandler.send(message);
+            }
+        }
+    }
+
+    public void ignoreUser(String from, String to, String message) {
+        message = "/ignore" + REGEX + from + REGEX + to + REGEX + message;
+        for (ClientHandler clientHandler : clientHandlers) {
+            if (clientHandler.getUserNick().equals(to)) {
+                clientHandler.send(message);
+            }
         }
     }
 

@@ -27,6 +27,8 @@ public class MainChatController implements Initializable, MessageProcessor {
 
     private String nick;
     private NetworkService networkService;
+    private String ignore;
+    private String tetATet;
 
     @FXML
     public VBox loginPanel;
@@ -51,6 +53,7 @@ public class MainChatController implements Initializable, MessageProcessor {
 
     @FXML
     public Button btnSend;
+    private Object ArrayList;
 
     public void connectToServer(ActionEvent actionEvent) {
     }
@@ -85,10 +88,10 @@ public class MainChatController implements Initializable, MessageProcessor {
             networkService.sendMessage("/broadcast" + REGEX  + message);
             inputField.clear();
         }
-//        else {
-//            networkService.sendMessage("/private" + REGEX + recipient + REGEX + message);
-//            inputField.clear();
-//        }
+        else {
+            networkService.sendMessage("/private" + REGEX + recipient + REGEX + message);
+            inputField.clear();
+        }
 //        mainChatArea.appendText(recipient + ": " + message + System.lineSeparator());
 
     }
@@ -125,13 +128,17 @@ public class MainChatController implements Initializable, MessageProcessor {
                     contacts.add(splitMessage[i]);
                 }
                 contactList.setItems(FXCollections.observableList(contacts));
+                contextMenu(contacts);
                 break;
-//            case "/private" :
-//                var from = splitMessage[1];
-//                var to = splitMessage[2];
-//                var mess = splitMessage[3];
-//                mainChatArea.appendText("Private from " + splitMessage[1] + ": " + splitMessage[3] + System.lineSeparator());
-//                break;
+            case "/private" :
+                mainChatArea.appendText("Private from " + splitMessage[1] + ": " + splitMessage[3] + System.lineSeparator());
+                break;
+            case "/tetATet" :
+                mainChatArea.appendText(  splitMessage[1] + " offer you " + splitMessage[3] + System.lineSeparator());
+                break;
+            case "/ignore" :
+                mainChatArea.appendText(  splitMessage[3] + "by " + splitMessage[1] + System.lineSeparator());
+                break;
         }
     }
 
@@ -148,7 +155,6 @@ public class MainChatController implements Initializable, MessageProcessor {
         if (login.isBlank() || password.isBlank()) {
             return;
         }
-
         var message = "/auth" + REGEX + login + REGEX + password;
 
         if (!networkService.isConnected()) {
@@ -161,5 +167,35 @@ public class MainChatController implements Initializable, MessageProcessor {
             }
         }
         networkService.sendMessage(message);
+    }
+
+    private void contextMenu(ArrayList<String> contacts) {
+        ContextMenu contextMenu = new ContextMenu();
+        MenuItem item1 = new MenuItem("Private");
+        MenuItem item2 = new MenuItem("BlackList");
+        item1.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                var recipient = contactList.getSelectionModel().getSelectedItem();
+                tetATet = "/tetATet" + REGEX +  recipient + REGEX + "private chat.";
+                networkService.sendMessage(tetATet);
+            }
+        });
+        item2.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                var recipient = contactList.getSelectionModel().getSelectedItem();
+                ignore = "/ignore" + REGEX +  recipient + REGEX + "You are blocked ";
+                networkService.sendMessage(ignore);
+            }
+        });
+        contextMenu.getItems().addAll(item1, item2);
+        contactList.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
+            @Override
+            public void handle(ContextMenuEvent contextMenuEvent) {
+                contextMenu.show(contactList, contextMenuEvent.getScreenX(), contextMenuEvent.getScreenY());
+            }
+        });
+        contactList.setItems(FXCollections.observableList(contacts));
     }
 }
