@@ -1,7 +1,7 @@
 package projectServer.server;
 
 import projectServer.auth.AuthService;
-import projectServer.auth.InMemoryAuthService;
+import props.PropertyReader;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -11,23 +11,24 @@ import java.util.List;
 
 public class Server {
     public static final String REGEX = "%!%";
-    private static final int PORT = 8189;
-    private AuthService authService;
-    private List<ClientHandler> clientHandlers;
+    private final int port;
+    private final AuthService authService;
+    private final List<ClientHandler> clientHandlers;
 
     public Server(AuthService authService) {
+        port = PropertyReader.getInstance().getPort();
         this.clientHandlers = new ArrayList<>();
         this.authService = authService;
     }
 
     public void start() {
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Server start!");
             while (true) {
                 System.out.println("Waiting for connection......");
-                Socket socket = serverSocket.accept();
+                var socket = serverSocket.accept();
                 System.out.println("Client connected");
-                ClientHandler clientHandler = new ClientHandler(socket, this);
+                var clientHandler = new ClientHandler(socket, this);
                 clientHandler.handle();
             }
         } catch (IOException e) {
@@ -60,6 +61,11 @@ public class Server {
                 clientHandler.send(message);
             }
         }
+    }
+
+    public synchronized void removeAuthorizedClientFromList(ClientHandler clientHandler) {
+        clientHandlers.remove(clientHandler);
+        sendOnlineClients();
     }
 
     public void ignoreUser(String from, String to, String message) {

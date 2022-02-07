@@ -30,12 +30,13 @@ public class ClientHandler {
     public void handle() {
         handlerThread = new Thread(() -> {
             authorize();
-            while (!Thread.currentThread().isInterrupted() && socket.isConnected()) {
+            while (!Thread.currentThread().isInterrupted() && !socket.isClosed()) {
                 try {
                     var message = in.readUTF();
                     handleMessage(message);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.out.println("Connection broken with user " + user);
+                    server.removeAuthorizedClientFromList(this);
                 }
             }
         });
@@ -44,21 +45,45 @@ public class ClientHandler {
 
     private void handleMessage(String message) {
         var splitMessage = message.split(Server.REGEX);
-        switch (splitMessage[0]) {
-            case "/broadcast":
-                server.broadcastMessage(user, splitMessage[1]);
-                break;
-            case "/private" :
-                server.privateMessage(user, splitMessage[1], splitMessage[2]);
-                break;
-            case "/ignore" :
-                server.ignoreUser(user, splitMessage[1], splitMessage[2]);
-                break;
-            case "/tetATet" :
-                server.tetATetMessage(user, splitMessage[1], splitMessage[2]);
-                break;
+        try {
+            switch (splitMessage[0]) {
+                case "/broadcast":
+                    server.broadcastMessage(user, splitMessage[1]);
+                    break;
+                case "/private":
+                    server.privateMessage(user, splitMessage[1], splitMessage[2]);
+                    break;
+                case "/ignore":
+                    server.ignoreUser(user, splitMessage[1], splitMessage[2]);
+                    break;
+                case "/tetATet":
+                    server.tetATetMessage(user, splitMessage[1], splitMessage[2]);
+                    break;
+                case "/change_nick":
+                    String nick = server.getAuthService().changeNick(this.user, splitMessage[1]);
+                    server.removeAuthorizedClientFromList(this);
+                    this.user = nick;
+                    server.addAuthorizedClientToList(this);
+                    send("/change_nick_ok");
+                    break;
+                case "/change_pass":
+                    server.getAuthService().changePassword(this.user, splitMessage[1], splitMessage[2]);
+                    send("/change_pass_ok");
+                    break;
+                case "/remove":
+                    server.getAuthService().deleteUser(splitMessage[1], splitMessage[2]);
+                    this.socket.close();
+                    break;
+                case "/register":
+                    server.getAuthService().createNewUser(splitMessage[1], splitMessage[2], splitMessage[3]);
+                    send("register_ok:");
+                    break;
+            }
         }
-    }
+            catch (IOException e) {
+                send("/error" + Server.REGEX + e.getMessage());
+            }
+        }
 
     private void authorize() {
         System.out.println("Authorizing");
