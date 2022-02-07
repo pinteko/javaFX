@@ -31,28 +31,44 @@ public class MainChatController implements Initializable, MessageProcessor {
     private String tetATet;
 
     @FXML
-    public VBox loginPanel;
+    private VBox loginPanel;
 
     @FXML
-    public TextField loginField;
+    private TextField loginField;
 
     @FXML
-    public PasswordField passwordField;
+    private PasswordField passwordField;
 
     @FXML
-    public VBox mainChatPanel;
+    private VBox mainChatPanel;
 
     @FXML
-    public TextField inputField;
+    private TextField inputField;
 
     @FXML
-    public TextArea mainChatArea;
+    private TextArea mainChatArea;
 
     @FXML
-    public ListView contactList;
+    private ListView contactList;
 
     @FXML
-    public Button btnSend;
+    private PasswordField newPasswordField;
+
+    @FXML
+    private PasswordField oldPassField;
+
+    @FXML
+    private VBox changePasswordPanel;
+
+    @FXML
+    private TextField newNickField;
+
+    @FXML
+    private VBox changeNickPanel;
+
+    @FXML
+    private Button btnSend;
+
     private Object ArrayList;
 
     public void connectToServer(ActionEvent actionEvent) {
@@ -139,6 +155,13 @@ public class MainChatController implements Initializable, MessageProcessor {
             case "/ignore" :
                 mainChatArea.appendText(  splitMessage[3] + "by " + splitMessage[1] + System.lineSeparator());
                 break;
+            case "/change_pass_ok":
+                changePasswordPanel.setVisible(false);
+                mainChatPanel.setVisible(true);
+                break;
+            default:
+                mainChatArea.appendText(splitMessage[0] + System.lineSeparator());
+                break;
         }
     }
 
@@ -197,5 +220,35 @@ public class MainChatController implements Initializable, MessageProcessor {
             }
         });
         contactList.setItems(FXCollections.observableList(contacts));
+    }
+
+    public void sendChangeNick(ActionEvent actionEvent) {
+        if (newNickField.getText().isBlank()) return;
+        networkService.sendMessage("/change_nick" + REGEX + newNickField.getText());
+    }
+
+    public void sendChangePass(ActionEvent actionEvent) {
+        if (newPasswordField.getText().isBlank() || oldPassField.getText().isBlank()) return;
+        networkService.sendMessage("/change_pass" + REGEX + oldPassField.getText() + REGEX + newPasswordField.getText());
+    }
+
+    public void sendEternalLogout(ActionEvent actionEvent) {
+        networkService.sendMessage("/remove");
+    }
+
+    public void returnToChat(ActionEvent actionEvent) {
+        changeNickPanel.setVisible(false);
+        changePasswordPanel.setVisible(false);
+        mainChatPanel.setVisible(true);
+    }
+
+    public void showChangeNick(ActionEvent actionEvent) {
+        mainChatPanel.setVisible(false);
+        changeNickPanel.setVisible(true);
+    }
+
+    public void showChangePass(ActionEvent actionEvent) {
+        mainChatPanel.setVisible(false);
+        changePasswordPanel.setVisible(true);
     }
 }
