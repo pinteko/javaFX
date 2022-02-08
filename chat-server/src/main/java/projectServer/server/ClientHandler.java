@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class ClientHandler {
     private Socket socket;
@@ -29,18 +30,37 @@ public class ClientHandler {
 
     public void handle() {
         handlerThread = new Thread(() -> {
-            authorize();
-            while (!Thread.currentThread().isInterrupted() && !socket.isClosed()) {
+                authorize();
+            while (!Thread.currentThread().isInterrupted() || !socket.isClosed()) {
                 try {
                     var message = in.readUTF();
                     handleMessage(message);
                 } catch (IOException e) {
                     System.out.println("Connection broken with user " + user);
                     server.removeAuthorizedClientFromList(this);
+                    break;
                 }
             }
         });
         handlerThread.start();
+
+        new Thread(() -> {
+            try {
+                Thread.sleep(120000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println(this.user);
+            if (this.user == null) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                handlerThread.interrupt();
+                System.out.println("This handlerThread was removed");
+            }
+        }).start();
     }
 
     private void handleMessage(String message) {
@@ -87,38 +107,38 @@ public class ClientHandler {
 
     private void authorize() {
         System.out.println("Authorizing");
-        while (true) {
-            try {
-                var message = in.readUTF();
-                if (message.startsWith("/auth")) {
-                    var parsedAuthMessage = message.split(Server.REGEX);
-                    var response = "";
-                    String nickname = null;
-                    try {
-                        nickname = server.getAuthService().authorizeUserByLoginAndPassword(parsedAuthMessage[1], parsedAuthMessage[2]);
-                    } catch (WrongCredentialsException e) {
-                        response = "/error" + Server.REGEX + e.getMessage();
-                        System.out.println("Wrong credentials, nick " + parsedAuthMessage[1]);
-                    }
+            while (!Thread.currentThread().isInterrupted() || !socket.isClosed()) {
+                try {
+                    var message = in.readUTF();
+                    if (message.startsWith("/auth")) {
+                        var parsedAuthMessage = message.split(Server.REGEX);
+                        var response = "";
+                        String nickname = null;
+                        try {
+                            nickname = server.getAuthService().authorizeUserByLoginAndPassword(parsedAuthMessage[1], parsedAuthMessage[2]);
+                        } catch (WrongCredentialsException e) {
+                            response = "/error" + Server.REGEX + e.getMessage();
+                            System.out.println("Wrong credentials, nick " + parsedAuthMessage[1]);
+                        }
 
-                    if (server.isNickBusy(nickname)) {
-                        response = "/error" + Server.REGEX + "this client already connected";
-                        System.out.println("Nick busy " + nickname);
-                    }
-                    if (!response.equals("")) {
-                        send(response);
-                    } else {
-                        this.user = nickname;
-                        server.addAuthorizedClientToList(this);
-                        send("/auth_ok" + Server.REGEX + nickname);
-                        break;
-                    }
+                        if (server.isNickBusy(nickname)) {
+                            response = "/error" + Server.REGEX + "this client already connected";
+                            System.out.println("Nick busy " + nickname);
+                        }
+                        if (!response.equals("")) {
+                            send(response);
+                        } else {
+                            this.user = nickname;
+                            server.addAuthorizedClientToList(this);
+                            send("/auth_ok" + Server.REGEX + nickname);
+                            break;
+                        }
 
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
-        }
     }
 
     public void send(String msg) {

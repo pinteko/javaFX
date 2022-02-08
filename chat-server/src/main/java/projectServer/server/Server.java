@@ -82,11 +82,6 @@ public class Server {
         sendOnlineClients();
     }
 
-    public synchronized void removeAuthorizedClientToList(ClientHandler clientHandler) {
-        clientHandlers.remove(clientHandler);
-        sendOnlineClients();
-    }
-
     public void sendOnlineClients() {
         var sb = new StringBuilder("/list");
         sb.append(REGEX);
