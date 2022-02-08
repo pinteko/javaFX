@@ -31,13 +31,14 @@ public class ClientHandler {
     public void handle() {
         handlerThread = new Thread(() -> {
                 authorize();
-            while (!Thread.currentThread().isInterrupted() && !socket.isClosed()) {
+            while (!Thread.currentThread().isInterrupted() || !socket.isClosed()) {
                 try {
                     var message = in.readUTF();
                     handleMessage(message);
                 } catch (IOException e) {
                     System.out.println("Connection broken with user " + user);
                     server.removeAuthorizedClientFromList(this);
+                    break;
                 }
             }
         });
@@ -106,7 +107,7 @@ public class ClientHandler {
 
     private void authorize() {
         System.out.println("Authorizing");
-            while (true) {
+            while (!Thread.currentThread().isInterrupted() || !socket.isClosed()) {
                 try {
                     var message = in.readUTF();
                     if (message.startsWith("/auth")) {
