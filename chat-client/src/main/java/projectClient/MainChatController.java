@@ -159,6 +159,10 @@ public class MainChatController implements Initializable, MessageProcessor {
                 changePasswordPanel.setVisible(false);
                 mainChatPanel.setVisible(true);
                 break;
+            case "/change_nick_ok":
+                changeNickPanel.setVisible(false);
+                mainChatPanel.setVisible(true);
+                break;
             default:
                 mainChatArea.appendText(splitMessage[0] + System.lineSeparator());
                 break;

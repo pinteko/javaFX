@@ -11,7 +11,6 @@
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="projectClient.MainChatController">
     <VBox visible="false" fx:id="changeNickPanel">
-
         <HBox VBox.vgrow="ALWAYS">
             <VBox>
                 <Label text="Please enter your new nickname:"/>
@@ -59,7 +58,7 @@
                 <MenuItem text="Item3" onAction="#mockAction"/>
                 <MenuItem text="Item4" onAction="#mockAction"/>
                 <MenuItem text="Item5" onAction="#mockAction"/>
-                <MenuItem text="Item6" onAction="#mockAction"/>
+                <MenuItem text="Change Nick" onAction="#showChangeNick"/>
             </Menu>
             <Menu text="View">
                 <MenuItem text="Item1" onAction="#mockAction"/>

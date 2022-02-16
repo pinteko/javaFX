@@ -47,7 +47,7 @@ public class InMemoryAuthService implements AuthService {
     }
 
     @Override
-    public User createNewUser(String login, String password, String nick) {
+    public User createNewUser(String login, String password, String nick, String secret) {
         return null;
     }
 

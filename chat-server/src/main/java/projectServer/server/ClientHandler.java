@@ -81,10 +81,15 @@ public class ClientHandler {
                     break;
                 case "/change_nick":
                     String nick = server.getAuthService().changeNick(this.user, splitMessage[1]);
-                    server.removeAuthorizedClientFromList(this);
-                    this.user = nick;
-                    server.addAuthorizedClientToList(this);
-                    send("/change_nick_ok");
+                    if (nick.equals(this.user)) {
+                        send("/error" + Server.REGEX + "This nick already used!");
+                    }
+                    else {
+                        server.removeAuthorizedClientFromList(this);
+                        this.user = nick;
+                        server.addAuthorizedClientToList(this);
+                        send("/change_nick_ok");
+                    }
                     break;
                 case "/change_pass":
                     server.getAuthService().changePassword(this.user, splitMessage[1], splitMessage[2]);
@@ -95,7 +100,7 @@ public class ClientHandler {
                     this.socket.close();
                     break;
                 case "/register":
-                    server.getAuthService().createNewUser(splitMessage[1], splitMessage[2], splitMessage[3]);
+                    server.getAuthService().createNewUser(splitMessage[1], splitMessage[2], splitMessage[3], splitMessage[4]);
                     send("register_ok:");
                     break;
             }
