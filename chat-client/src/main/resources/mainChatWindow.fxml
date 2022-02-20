@@ -90,12 +90,12 @@
             </ListView>
         </HBox>
         <HBox VBox.vgrow="ALWAYS">
-            <TextField fx:id="inputField" HBox.hgrow="ALWAYS" prefHeight="70.0" onAction="#sendMessage">
+            <TextField fx:id="inputField" HBox.hgrow="ALWAYS" prefHeight="40.0" onAction="#sendMessage">
                 <HBox.margin>
                     <Insets left="5.0" right="5.0"/>
                 </HBox.margin>
             </TextField>
-            <Button fx:id="btnSend" minWidth="125.0" text="SEND" prefHeight="70.0" onAction="#sendMessage" >
+            <Button fx:id="btnSend" minWidth="125.0" text="SEND" prefHeight="40.0" onAction="#sendMessage" >
                 <HBox.margin>
                     <Insets left="5.0" right="5.0"/>
                 </HBox.margin>
