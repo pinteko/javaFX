@@ -12,8 +12,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 
@@ -26,6 +27,7 @@ public class MainChatController implements Initializable, MessageProcessor {
     public static final String REGEX = "%!%";
 
     private String nick;
+    private String filePath;
     private NetworkService networkService;
     private String ignore;
     private String tetATet;
@@ -129,9 +131,12 @@ public class MainChatController implements Initializable, MessageProcessor {
                 this.nick = splitMessage[1];
                 loginPanel.setVisible(false);
                 mainChatPanel.setVisible(true);
+                printHistory();
                 break;
             case "/broadcast" :
-                mainChatArea.appendText(splitMessage[1] + ": " + splitMessage[2] + System.lineSeparator());
+                var broadcastMess = splitMessage[1] + ": " + splitMessage[2] + System.lineSeparator();
+                mainChatArea.appendText(broadcastMess);
+                writeHistory(broadcastMess);
                 break;
             case "/error" :
                 showError(splitMessage[1]);
@@ -147,20 +152,32 @@ public class MainChatController implements Initializable, MessageProcessor {
                 contextMenu(contacts);
                 break;
             case "/private" :
-                mainChatArea.appendText("Private from " + splitMessage[1] + ": " + splitMessage[3] + System.lineSeparator());
+                var privateMess = "Private from " + splitMessage[1] + ": " + splitMessage[3] + System.lineSeparator();
+                mainChatArea.appendText(privateMess);
+                writeHistory(privateMess);
                 break;
             case "/tetATet" :
-                mainChatArea.appendText(  splitMessage[1] + " offer you " + splitMessage[3] + System.lineSeparator());
+                var tetATet = splitMessage[1] + " offer you " + splitMessage[3] + System.lineSeparator();
+                mainChatArea.appendText(tetATet);
+                writeHistory(tetATet);
                 break;
             case "/ignore" :
-                mainChatArea.appendText(  splitMessage[3] + "by " + splitMessage[1] + System.lineSeparator());
+                var ignore = splitMessage[3] + "by " + splitMessage[1] + System.lineSeparator();
+                mainChatArea.appendText(ignore);
+                writeHistory(ignore);
                 break;
             case "/change_pass_ok":
                 changePasswordPanel.setVisible(false);
                 mainChatPanel.setVisible(true);
                 break;
+            case "/change_nick_ok":
+                changeNickPanel.setVisible(false);
+                mainChatPanel.setVisible(true);
+                break;
             default:
-                mainChatArea.appendText(splitMessage[0] + System.lineSeparator());
+                var def = splitMessage[0] + System.lineSeparator();
+                mainChatArea.appendText(def);
+                writeHistory(def);
                 break;
         }
     }
@@ -178,8 +195,15 @@ public class MainChatController implements Initializable, MessageProcessor {
         if (login.isBlank() || password.isBlank()) {
             return;
         }
+        filePath = "History for " + login + ".txt";
+        try {
+            var file = new File("" + filePath);
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+        }
+        catch (IOException e) {e.printStackTrace();}
         var message = "/auth" + REGEX + login + REGEX + password;
-
         if (!networkService.isConnected()) {
             try {
                 networkService.connect();
@@ -251,4 +275,47 @@ public class MainChatController implements Initializable, MessageProcessor {
         mainChatPanel.setVisible(false);
         changePasswordPanel.setVisible(true);
     }
-}
+
+    private void writeHistory(String mess) {
+        try (var fos = new FileOutputStream("" + filePath, true)) {
+            fos.write(mess.getBytes(StandardCharsets.UTF_8));}
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void printHistory() {
+        try (RandomAccessFile raf = new RandomAccessFile("" + filePath, "r");) {
+            long len = raf.length();
+            if (len <= 3) {return;}
+            int count = 0;
+            long pos = len;
+            while (pos > 0) {
+                    --pos;
+                    raf.seek(pos);
+                    if (raf.readByte() == '\n') {
+                        count++;
+                        if (count == 100) {
+                            pos++;
+                            break; }
+                    }
+            }
+            long firstPosPosition = pos;
+            while (pos < len - 1) {
+                if (pos == firstPosPosition) {
+                    raf.seek(pos);
+                    mainChatArea.appendText(raf.readLine() + System.lineSeparator());
+                }
+                    pos++;
+                    raf.seek(pos);
+                    if (raf.readByte() == '\n' && pos != len - 1) {
+                        mainChatArea.appendText(raf.readLine() + System.lineSeparator());
+                    }
+                }
+        } catch (IOException e) {
+                 e.printStackTrace();
+         }
+        }
+    }
+
+
