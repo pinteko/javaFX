@@ -8,17 +8,24 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class Server {
     public static final String REGEX = "%!%";
     private final int port;
     private final AuthService authService;
     private final List<ClientHandler> clientHandlers;
+    private final ExecutorService executor;
+    private Future<String> handlers;
 
     public Server(AuthService authService) {
         port = PropertyReader.getInstance().getPort();
         this.clientHandlers = new ArrayList<>();
         this.authService = authService;
+        executor = Executors.newCachedThreadPool();
     }
 
     public void start() {
@@ -28,14 +35,24 @@ public class Server {
                 System.out.println("Waiting for connection......");
                 var socket = serverSocket.accept();
                 System.out.println("Client connected");
+                var message = "Client in the work";
                 var clientHandler = new ClientHandler(socket, this);
-                clientHandler.handle();
+                handlers = executor.submit(() -> {
+                    clientHandler.handle();
+                    return message;
+                });
+                try { System.out.println(handlers.get()); }
+                catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+
             }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             authService.stop();
             shutdown();
+            executor.shutdown();
         }
     }
 

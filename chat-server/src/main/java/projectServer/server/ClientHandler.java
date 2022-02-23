@@ -43,14 +43,12 @@ public class ClientHandler {
             }
         });
         handlerThread.start();
-
         new Thread(() -> {
             try {
                 Thread.sleep(120000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            System.out.println(this.user);
             if (this.user == null) {
                 try {
                     socket.close();
