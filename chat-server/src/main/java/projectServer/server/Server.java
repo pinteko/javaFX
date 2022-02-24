@@ -19,7 +19,6 @@ public class Server {
     private final AuthService authService;
     private final List<ClientHandler> clientHandlers;
     private final ExecutorService executor;
-    private Future<String> handlers;
 
     public Server(AuthService authService) {
         port = PropertyReader.getInstance().getPort();
@@ -35,24 +34,13 @@ public class Server {
                 System.out.println("Waiting for connection......");
                 var socket = serverSocket.accept();
                 System.out.println("Client connected");
-                var message = "Client in the work";
                 var clientHandler = new ClientHandler(socket, this);
-                handlers = executor.submit(() -> {
                     clientHandler.handle();
-                    return message;
-                });
-                try { System.out.println(handlers.get()); }
-                catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
-                }
-
             }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            authService.stop();
             shutdown();
-            executor.shutdown();
         }
     }
 
@@ -122,10 +110,15 @@ public class Server {
     }
 
     private void shutdown() {
-
+        authService.stop();
+        executor.shutdown();
     }
 
     public AuthService getAuthService() {
         return authService;
+    }
+
+    public ExecutorService getExecutorService() {
+        return executor;
     }
 }
