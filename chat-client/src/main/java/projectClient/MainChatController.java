@@ -196,14 +196,7 @@ public class MainChatController implements Initializable, MessageProcessor {
             return;
         }
         filePath = "History for " + login + ".txt";
-        try {
-            var file = new File("" + filePath);
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-        }
-        catch (IOException e) {e.printStackTrace();}
-        var message = "/auth" + REGEX + login + REGEX + password;
+        var message = "/auth" + REGEX + login + REGEX + password + REGEX + filePath;
         if (!networkService.isConnected()) {
             try {
                 networkService.connect();

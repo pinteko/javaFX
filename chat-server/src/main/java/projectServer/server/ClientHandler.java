@@ -1,20 +1,24 @@
 package projectServer.server;
 
 import projectServer.error.WrongCredentialsException;
+import props.PropertyReader;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class ClientHandler {
     private Socket socket;
     private DataOutputStream out;
     private DataInputStream in;
-    private Thread handlerThread;
     private Server server;
     private String user;
+    private String currentThread;
 
     public ClientHandler(Socket socket, Server server) {
         try {
@@ -29,9 +33,9 @@ public class ClientHandler {
     }
 
     public void handle() {
-        handlerThread = new Thread(() -> {
+        server.getExecutorService().execute(() -> {
                 authorize();
-            while (!Thread.currentThread().isInterrupted() || !socket.isClosed()) {
+            while (!Thread.currentThread().isInterrupted() && !socket.isClosed()) {
                 try {
                     var message = in.readUTF();
                     handleMessage(message);
@@ -40,27 +44,27 @@ public class ClientHandler {
                     server.removeAuthorizedClientFromList(this);
                     break;
                 }
+                finally {
+                    Thread.currentThread().interrupt();
+                }
             }
         });
-        handlerThread.start();
 
-        new Thread(() -> {
+        server.getExecutorService().execute(() -> {
             try {
                 Thread.sleep(120000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            System.out.println(this.user);
             if (this.user == null) {
                 try {
                     socket.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                handlerThread.interrupt();
                 System.out.println("This handlerThread was removed");
             }
-        }).start();
+        });
     }
 
     private void handleMessage(String message) {
@@ -112,7 +116,7 @@ public class ClientHandler {
 
     private void authorize() {
         System.out.println("Authorizing");
-            while (!Thread.currentThread().isInterrupted() || !socket.isClosed()) {
+            while (!Thread.currentThread().isInterrupted() && !socket.isClosed()) {
                 try {
                     var message = in.readUTF();
                     if (message.startsWith("/auth")) {
@@ -135,6 +139,13 @@ public class ClientHandler {
                         } else {
                             this.user = nickname;
                             server.addAuthorizedClientToList(this);
+                            try {
+                                var file = new File("" + parsedAuthMessage[3]);
+                                if (!file.exists()) {
+                                    file.createNewFile();
+                                }
+                            }
+                            catch (IOException e) {e.printStackTrace();}
                             send("/auth_ok" + Server.REGEX + nickname);
                             break;
                         }
@@ -154,9 +165,6 @@ public class ClientHandler {
         }
     }
 
-    public Thread getHandlerThread() {
-        return handlerThread;
-    }
 
     public String getUserNick() {
         return this.user;
