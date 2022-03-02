@@ -1,5 +1,7 @@
 package projectServer.server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import projectServer.auth.AuthService;
 import props.PropertyReader;
 
@@ -19,6 +21,8 @@ public class Server {
     private final AuthService authService;
     private final List<ClientHandler> clientHandlers;
     private final ExecutorService executor;
+    private static final Logger log = LogManager.getLogger("projectServer");
+    private static final Logger errorLog = LogManager.getLogger("errors");
 
     public Server(AuthService authService) {
         port = PropertyReader.getInstance().getPort();
@@ -29,16 +33,17 @@ public class Server {
 
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Server start!");
+            log.info("Server start!");
             while (true) {
-                System.out.println("Waiting for connection......");
+                log.trace("Waiting for connection......");
                 var socket = serverSocket.accept();
-                System.out.println("Client connected");
+                log.info("Client connected");
                 var clientHandler = new ClientHandler(socket, this);
                     clientHandler.handle();
             }
         } catch (IOException e) {
             e.printStackTrace();
+            errorLog.error("Server not started");
         } finally {
             shutdown();
         }

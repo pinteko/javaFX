@@ -1,5 +1,7 @@
 package projectServer.server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import projectServer.error.WrongCredentialsException;
 import props.PropertyReader;
 
@@ -19,6 +21,8 @@ public class ClientHandler {
     private Server server;
     private String user;
     private String currentThread;
+    private static final Logger log = LogManager.getLogger("projectServer");
+    private static final Logger errorLog = LogManager.getLogger("errors");
 
     public ClientHandler(Socket socket, Server server) {
         try {
@@ -26,7 +30,7 @@ public class ClientHandler {
             this.socket = socket;
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
-            System.out.println("Handler created");
+            log.info("Handler created");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -40,7 +44,7 @@ public class ClientHandler {
                     var message = in.readUTF();
                     handleMessage(message);
                 } catch (IOException e) {
-                    System.out.println("Connection broken with user " + user);
+                    log.info("Connection broken with user " + user);
                     server.removeAuthorizedClientFromList(this);
                     break;
                 }
@@ -62,7 +66,7 @@ public class ClientHandler {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                System.out.println("This handlerThread was removed");
+                log.info("This handlerThread was removed");
             }
         });
     }
@@ -86,7 +90,9 @@ public class ClientHandler {
                 case "/change_nick":
                     String nick = server.getAuthService().changeNick(this.user, splitMessage[1]);
                     if (nick.equals(this.user)) {
-                        send("/error" + Server.REGEX + "This nick already used!");
+                        send("/error" + Server.REGEX + "This nick (" + nick + ") already used!");
+                        log.error("This nick (" + nick + ") already used!");
+                        errorLog.error("This nick (" + nick + ") already used!");
                     }
                     else {
                         server.removeAuthorizedClientFromList(this);
@@ -111,11 +117,13 @@ public class ClientHandler {
         }
             catch (IOException e) {
                 send("/error" + Server.REGEX + e.getMessage());
+                log.error("/error" + Server.REGEX + e.getMessage());
+                errorLog.error("/error" + Server.REGEX + e.getMessage());
             }
         }
 
     private void authorize() {
-        System.out.println("Authorizing");
+        log.info("Authorizing");
             while (!Thread.currentThread().isInterrupted() && !socket.isClosed()) {
                 try {
                     var message = in.readUTF();
@@ -127,12 +135,14 @@ public class ClientHandler {
                             nickname = server.getAuthService().authorizeUserByLoginAndPassword(parsedAuthMessage[1], parsedAuthMessage[2]);
                         } catch (WrongCredentialsException e) {
                             response = "/error" + Server.REGEX + e.getMessage();
-                            System.out.println("Wrong credentials, nick " + parsedAuthMessage[1]);
+                            log.error("Wrong credentials, nick " + parsedAuthMessage[1]);
+                            errorLog.error("Wrong credentials, nick " + parsedAuthMessage[1]);
                         }
 
                         if (server.isNickBusy(nickname)) {
                             response = "/error" + Server.REGEX + "this client already connected";
-                            System.out.println("Nick busy " + nickname);
+                            log.error("Nick busy: " + nickname);
+                            errorLog.error("Nick busy: " + nickname);
                         }
                         if (!response.equals("")) {
                             send(response);

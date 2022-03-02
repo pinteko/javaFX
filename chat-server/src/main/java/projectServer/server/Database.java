@@ -1,5 +1,8 @@
 package projectServer.server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.sql.*;
 
 public class Database {
@@ -11,6 +14,8 @@ public class Database {
     private static final String DB_CONNECTION_STRING = "jdbc:sqlite:db/users.db";
     private static final String CREATE_REQUEST = "create table if not exists users " +
             "(id integer primary key autoincrement, login varchar(20), password varchar(20), nick varchar(20), secret varchar(20));";
+    private static final Logger errorLog = LogManager.getLogger("errors");
+    private static final Logger log = LogManager.getLogger("projectServer");
 
     public Database() {
         try {
@@ -66,12 +71,17 @@ public class Database {
     public boolean registrationSuccess(String login, String nick) throws SQLException {
         try (var searchLogin = statement.executeQuery("select id from users where login = \'" + login + "\';")) {
             if (searchLogin.next()) {
+                errorLog.error("This nick (" + login + ") already used");
+                log.error("This nick (" + login + ") already used");
                 return false;
             }
             else {
                 var searchNick = statement.executeQuery("select id from users where nick = \'" + nick + "\';");
                 if (searchNick.next()) {
+                    errorLog.error("This nick (" + nick + ") already used");
+                    log.error("This nick (" + nick + ") already used");
                     return false;
+
                 }
             }
         }
@@ -81,7 +91,10 @@ public class Database {
     public boolean freeNickSuccess(String oldNick, String newNick) throws SQLException {
         try (var searchNick = statement.executeQuery("select id from users where nick = \'" + newNick + "\';")) {
             if (searchNick.next()) {
+                errorLog.error("This nick (" + newNick + ") already used");
+                log.error("This nick (" + newNick + ") already used");
                 return false;
+
             }
             changeNick(oldNick, newNick);
             return true;
